@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+ENV/
+.env
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage*
+
+# OS / Editor
+.DS_Store
+.idea/
+.vscode/
+
+# Outputs / logs
+out/
+output/
+outputs/
+processed/
+*_clearml_stage/
+examples/output/
+*.log
+
+# Excel temp files
+~$*.xlsx
+~$*.xlsm
+~$*.xlam

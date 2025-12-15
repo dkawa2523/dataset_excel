@@ -1,0 +1,100 @@
+schema_version: 1
+
+clearml:
+  dataset_project: clearml_dataset_excel/examples
+  dataset_name: example_dataset_from_excel
+  output_uri: file://./output
+  tags: ["examples"]
+  # clone/enqueue で agent 実行したい場合に設定（repo は適宜変更）
+  # execution:
+  #   repository: https://github.com/your-org/clearml_dataset_excel.git
+  #   branch: main
+  #   working_dir: .
+  #   entry_point: clearml_agent_reprocess.py
+
+addin:
+  enabled: true
+  target_os: auto
+  spec_filename: run.yaml
+  vba_module_filename: clearml_dataset_excel_addin.bas
+  embed_vba: true
+  # Windows はテンプレ自体を .xlsx（マクロ無し）で配布し、実行は .xlam（アドイン）側で行うモード
+  windows_mode: addin
+  windows_template_filename: condition_template.xlsx
+  windows_addin_filename: clearml_dataset_excel_addin.xlam
+  # vba_template_excel: base_with_addin.xlsm  # (optional) macro入りテンプレから vbaProject.bin をコピーして自動組み込み（非UI）
+  # Excelマクロから実行するコマンド（${SPEC}, ${EXCEL} を置換）
+  # macOS は /bin/zsh -lc で実行するため、通常はPATHが反映されます（それでも失敗する場合はフルパスにしてください）。
+  command_mac: '/usr/bin/env python3 -m clearml_dataset_excel.cli run --spec "${SPEC}" --excel "${EXCEL}"'
+  # Python無しで配布したい場合は、同梱runner.exeを優先して使う（無ければ py -3 にフォールバック）
+  command_windows: 'if exist "clearml_dataset_excel_runner.exe" ("clearml_dataset_excel_runner.exe" run --spec "${SPEC}" --excel "${EXCEL}") else (py -3 -m clearml_dataset_excel.cli run --spec "${SPEC}" --excel "${EXCEL}")'
+
+template:
+  condition_sheet: Conditions
+  meta_sheet: _meta
+  template_filename: condition_template.xlsm
+
+condition:
+  columns:
+    - name: sample_id
+      type: str
+      required: true
+    - name: temperature
+      type: float
+      required: false
+    - name: meas_a_path
+      type: path
+      required: true
+    - name: meas_b_path
+      type: path
+      required: true
+
+files:
+  - id: meas_a
+    path_column: meas_a_path
+    format: csv
+    mapping:
+      axes:
+        t: time
+      targets:
+        - name: f_a
+          source: value
+          type: float
+      derived:
+        - name: f_a_scaled
+          expr: "f_a * 0.5"
+          type: float
+      aggregates:
+        - name: f_a_mean
+          source: f_a
+          op: mean
+          output_column: f_a_mean
+        - name: f_a_int
+          source: f_a
+          op: trapz
+          wrt: t
+          output_column: f_a_int
+
+  - id: meas_b
+    path_column: meas_b_path
+    format: csv
+    mapping:
+      axes:
+        t: time
+      targets:
+        - name: f_b
+          source: value
+          type: float
+      aggregates:
+        - name: f_b_max
+          source: f_b
+          op: max
+          output_column: f_b_max
+
+output:
+  output_dirname: processed
+  canonical_filename: canonical.csv
+  conditions_filename: conditions.csv
+  consolidated_excel_filename: consolidated.xlsx
+  include_file_path_columns: true
+  combine_mode: auto

@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "clearml-dataset-excel"
+version = "0.1.0"
+description = "YAML-driven Excel template + ClearML dataset uploader"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "clearml>=2.0.2",
+  "olefile>=0.47",
+  "pandas>=2.0",
+  "openpyxl>=3.1.0",
+  "PyYAML>=6.0",
+]
+
+[project.scripts]
+clearml-dataset-excel = "clearml_dataset_excel.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
